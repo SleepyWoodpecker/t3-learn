@@ -8,11 +8,30 @@ import type { RouterOutputs } from "~/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { LoadingPage } from "~/components/LoadingSpinner";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+  const [input, setInput] = useState("");
+  const trpcRoutes = api.useUtils();
+
+  const { mutate, isPending: isUploadingPost } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+
+      // invalidate the cache for the feed query
+      void trpcRoutes.posts.getAll.invalidate();
+    },
+  });
+
+  const handleCreateNewPost = async (
+    e: React.SyntheticEvent<HTMLButtonElement>,
+  ) => {
+    e.preventDefault();
+    mutate({ content: input });
+  };
 
   if (!user) {
     return null;
@@ -30,7 +49,13 @@ const CreatePostWizard = () => {
       <input
         placeholder="Type some emojis!!!"
         className="grow bg-transparent outline-none"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isUploadingPost}
       ></input>
+      <button className="border px-3" onClick={handleCreateNewPost}>
+        Post!
+      </button>
     </div>
   );
 };
@@ -118,7 +143,7 @@ export default function Home() {
               ) : (
                 <>
                   <CreatePostWizard />
-                  <SignOutButton>Sign Out</SignOutButton>
+                  {/* <SignOutButton>Sign Out</SignOutButton> */}
                 </>
               )}
             </div>
