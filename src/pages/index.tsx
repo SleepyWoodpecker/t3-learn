@@ -4,7 +4,9 @@ import Head from "next/head";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const hello = api.post.hello.useQuery({ text: "from tRPC" });
+  const { data } = api.posts.getAll.useQuery();
+
+  console.log(data);
 
   const user = useUser();
 
@@ -27,9 +29,9 @@ export default function Home() {
             </SignOutButton>
           )}
         </div>
-        <p className="text-2xl text-white">
-          {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-        </p>
+        <div>
+          {data?.map((post) => <div key={post.id}>{post.content}</div>)}
+        </div>
       </main>
     </>
   );
