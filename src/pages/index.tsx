@@ -7,6 +7,7 @@ import type { RouterOutputs } from "~/utils/api";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { LoadingPage } from "~/components/LoadingSpinner";
 
 dayjs.extend(relativeTime);
 
@@ -61,23 +62,38 @@ const PostView = (props: PostWithUser) => {
   );
 };
 
-export default function Home() {
-  const user = useUser();
-
-  console.log(user.user?.id);
-
-  // useful properties you can get
+const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingPage />;
   }
 
   if (!data) {
     return <div>Something went wrong</div>;
   }
 
-  console.log(data);
+  return (
+    <div className="flex flex-col">
+      {data?.map((fullPost) => (
+        <PostView {...fullPost} key={fullPost.post.id} />
+      ))}
+    </div>
+  );
+};
+
+export default function Home() {
+  const { user, isLoaded, isSignedIn } = useUser();
+
+  // useful properties you can get
+
+  if (!isLoaded) {
+    return <div></div>;
+  }
+
+  // because the T3 stack makes use of react query and because react query caches the API calls,
+  // you can call the feed query here first, so all of your data gets loaded in ASAP
+  api.posts.getAll.useQuery();
 
   return (
     <>
@@ -95,25 +111,19 @@ export default function Home() {
           {/* imposes the max width for md and above sized screens */}
           <div className="flex border-b border-slate-400 p-4">
             <div className="flex w-full justify-evenly">
-              {!user.isSignedIn ? (
+              {!isSignedIn ? (
                 <SignInButton>
                   <button>Sign in</button>
                 </SignInButton>
               ) : (
                 <>
                   <CreatePostWizard />
-                  <SignOutButton>
-                    <button>Sign out</button>
-                  </SignOutButton>
+                  <SignOutButton>Sign Out</SignOutButton>
                 </>
               )}
             </div>
           </div>
-          <div className="flex flex-col">
-            {data?.map((fullPost) => (
-              <PostView {...fullPost} key={fullPost.post.id} />
-            ))}
-          </div>
+          <Feed />
         </div>
       </main>
     </>
