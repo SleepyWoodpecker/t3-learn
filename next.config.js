@@ -18,6 +18,9 @@ const config = {
     defaultLocale: "en",
   },
   transpilePackages: ["geist"],
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "img.clerk.com" }],
+  },
 };
 
 export default config;
